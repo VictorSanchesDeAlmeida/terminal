@@ -64,6 +64,23 @@ var staticSuggestions = []prompt.Suggest{
 	{Text: "cat ~/.ssh/id_ed25519.pub", Description: "Show public SSH key"},
 	{Text: "pbcopy < ~/.ssh/id_ed25519.pub", Description: "Copy SSH key to clipboard (macOS)"},
 	{Text: "ssh -T git@github.com", Description: "Test SSH connection to GitHub"},
+
+	{Text: "docker build -t <image_name> .", Description: "Build Docker image"},
+	{Text: "docker run -p 80:80 <image_name>", Description: "Run Docker container"},
+	{Text: "docker ps", Description: "List running containers"},
+	{Text: "docker images", Description: "List Docker images"},
+	{Text: "docker rmi <image_name>", Description: "Remove Docker image"},
+	{Text: "docker stop <container_id>", Description: "Stop Docker container"},
+	{Text: "docker rm <container_id>", Description: "Remove Docker container"},
+
+	{Text: "code .", Description: "Open current directory in VS Code"},
+
+	{Text: "flutter pub get", Description: "Get Flutter dependencies"},
+	{Text: "flutter run", Description: "Run Flutter app"},
+	{Text: "flutter build apk", Description: "Build Android APK"},
+	{Text: "flutter build ios", Description: "Build iOS app"},
+	{Text: "flutter build web", Description: "Build web app"},
+	{Text: "flutter doctor", Description: "Check Flutter environment"},
 }
 
 func Complete(d prompt.Document) []prompt.Suggest {

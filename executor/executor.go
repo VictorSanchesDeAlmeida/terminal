@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"os/signal"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -37,9 +38,42 @@ func Execute(input string) {
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
 
-	if err := cmd.Run(); err != nil {
+	if err := runWithInterruptSupport(cmd); err != nil {
 		fmt.Println("Erro:", err)
 	}
+}
+
+func runWithInterruptSupport(cmd *exec.Cmd) error {
+	if err := cmd.Start(); err != nil {
+		return err
+	}
+
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, os.Interrupt)
+	defer signal.Stop(sigCh)
+
+	stopForward := make(chan struct{})
+	go func() {
+		for {
+			select {
+			case <-sigCh:
+				if cmd.Process == nil {
+					continue
+				}
+
+				if err := cmd.Process.Signal(os.Interrupt); err != nil {
+					_ = cmd.Process.Kill()
+				}
+			case <-stopForward:
+				return
+			}
+		}
+	}()
+
+	err := cmd.Wait()
+	close(stopForward)
+
+	return err
 }
 
 func PromptPrefix() string {

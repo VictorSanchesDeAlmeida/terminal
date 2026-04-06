@@ -9,6 +9,13 @@ DevShell é um terminal que oferece uma experiência aprimorada para desenvolved
 ## ✨ Funcionalidades
 
 - **Terminal interativo** com prompt dinâmico que acompanha o diretório atual
+- **Atalhos de teclado estilo terminal** (Linux/Windows/macOS):
+  - `Ctrl + C`: interrompe comando em execução (sem fechar o DevShell)
+  - `Ctrl + L`: limpa a tela
+  - `Ctrl + A` / `Ctrl + E`: início/fim da linha
+  - `Ctrl + U` / `Ctrl + K`: apaga antes/depois do cursor
+  - `Ctrl + W`: apaga palavra anterior
+  - `Ctrl + P` / `Ctrl + N`: histórico anterior/próximo
 - **Autocomplete inteligente** para comandos populares de desenvolvimento:
   - 🔧 **Git**: clone, status, add, commit, push, pull, checkout, merge, etc.
   - 📦 **NPM**: install, run scripts, build, test, lint
@@ -33,6 +40,7 @@ DevShell é um terminal que oferece uma experiência aprimorada para desenvolved
 - **Execução de comandos** multiplataforma:
   - Windows: `cmd /C`
   - macOS/Linux: `sh -c`
+- **Entrada interativa em comandos externos**: comandos que pedem input agora aceitam digitação normalmente
 
 ## 🛠️ Tecnologias
 

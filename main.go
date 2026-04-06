@@ -11,6 +11,7 @@ func main() {
 	p := prompt.New(
 		executor.Execute,
 		completer.Complete,
+		prompt.OptionSwitchKeyBindMode(prompt.EmacsKeyBind),
 		prompt.OptionLivePrefix(func() (string, bool) {
 			return executor.PromptPrefix(), true
 		}),
