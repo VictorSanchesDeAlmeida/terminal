@@ -96,6 +96,16 @@ func Complete(d prompt.Document) []prompt.Suggest {
 		{Text: "eas whoami", Description: "Current user"},
 	}
 
+	sshKeyGitCommands := []prompt.Suggest{
+		{Text: "ssh-keygen -t ed25519 -C \"seu_email@example.com\"", Description: "Generate SSH key for GitHub"},
+		{Text: "eval $(ssh-agent -s)", Description: "Init SSH agent"},
+		{Text: "ssh-add ~/.ssh/id_ed25519", Description: "Add SSH key to agent"},
+		{Text: "cat ~/.ssh/id_ed25519.pub", Description: "Show public SSH key"},
+		{Text: "pbcopy < ~/.ssh/id_ed25519.pub", Description: "Copy SSH key to clipboard (macOS)"},
+		{Text: "ls ~/.ssh", Description: "List SSH keys"},
+		{Text: "ssh -T git@github.com", Description: "Test SSH connection to GitHub"},
+	}
+
 	suggestions := []prompt.Suggest{}
 
 	suggestions = append(suggestions, commands...)
@@ -106,6 +116,7 @@ func Complete(d prompt.Document) []prompt.Suggest {
 	suggestions = append(suggestions, goCommands...)
 	suggestions = append(suggestions, expoCommands...)
 	suggestions = append(suggestions, easCommands...)
+	suggestions = append(suggestions, sshKeyGitCommands...)
 
 	return prompt.FilterHasPrefix(suggestions, word, true)
 }
@@ -144,6 +155,13 @@ func handleDynamic(word string) []prompt.Suggest {
 				Description: "Arquivo ou pasta",
 			})
 		}
+	}
+
+	if strings.HasPrefix("exit", word) {
+		suggestions = append(suggestions, prompt.Suggest{
+			Text:        "exit",
+			Description: "Sair do terminal",
+		})
 	}
 
 	return suggestions
