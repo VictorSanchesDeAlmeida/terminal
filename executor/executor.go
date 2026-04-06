@@ -4,11 +4,18 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
+	"strings"
 )
 
 func Execute(input string) {
-		if input == "" {
+	input = strings.TrimSpace(input)
+	if input == "" {
+		return
+	}
+
+	if handleBuiltin(input) {
 		return
 	}
 
@@ -16,11 +23,9 @@ func Execute(input string) {
 
 	switch runtime.GOOS {
 	case "windows":
-		// cmd.exe é mais garantido que PowerShell
 		cmd = exec.Command("cmd", "/C", input)
 
 	case "darwin", "linux":
-		// sh é o mais compatível possível
 		cmd = exec.Command("sh", "-c", input)
 
 	default:
@@ -35,4 +40,68 @@ func Execute(input string) {
 	if err := cmd.Run(); err != nil {
 		fmt.Println("Erro:", err)
 	}
+}
+
+func PromptPrefix() string {
+	currentDir, err := os.Getwd()
+	if err != nil {
+		return "devshell >> "
+	}
+
+	return currentDir + " >> "
+}
+
+func handleBuiltin(input string) bool {
+	parts := strings.Fields(input)
+	if len(parts) == 0 {
+		return true
+	}
+
+	switch parts[0] {
+	case "exit", "quit":
+		os.Exit(0)
+		return true
+	case "pwd":
+		cwd, err := os.Getwd()
+		if err != nil {
+			fmt.Println("Erro:", err)
+			return true
+		}
+		fmt.Println(cwd)
+		return true
+	case "cd":
+		target, err := resolveCdTarget(parts)
+		if err != nil {
+			fmt.Println("Erro:", err)
+			return true
+		}
+
+		if err := os.Chdir(target); err != nil {
+			fmt.Println("Erro:", err)
+		}
+		return true
+	case "clear":
+		fmt.Print("\033[H\033[2J")
+		return true
+	}
+
+	return false
+}
+
+func resolveCdTarget(parts []string) (string, error) {
+	if len(parts) == 1 || parts[1] == "~" {
+		return os.UserHomeDir()
+	}
+
+	target := parts[1]
+
+	if strings.HasPrefix(target, "~") {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return "", err
+		}
+		target = filepath.Join(home, strings.TrimPrefix(target, "~/"))
+	}
+
+	return target, nil
 }

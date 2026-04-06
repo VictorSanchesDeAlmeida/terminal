@@ -8,7 +8,7 @@ DevShell é um terminal que oferece uma experiência aprimorada para desenvolved
 
 ## ✨ Funcionalidades
 
-- **Terminal interativo** com prompt customizável que mostra o diretório atual
+- **Terminal interativo** com prompt dinâmico que acompanha o diretório atual
 - **Autocomplete inteligente** para comandos populares de desenvolvimento:
   - 🔧 **Git**: clone, status, add, commit, push, pull, checkout, merge, etc.
   - 📦 **NPM**: install, run scripts, build, test, lint
@@ -23,13 +23,22 @@ DevShell é um terminal que oferece uma experiência aprimorada para desenvolved
   - `home`: mostra o diretório home do usuário
   - `files`: lista arquivos e pastas do diretório atual
 
-- **Execução de comandos** através do PowerShell no Windows
+- **Built-ins reais do shell** (não abrem subprocesso):
+  - `cd` (incluindo `cd ..` e `cd ~`)
+  - `pwd`
+  - `clear`
+  - `exit` e `quit`
+  - autocomplete contextual de diretórios para `cd`
+
+- **Execução de comandos** multiplataforma:
+  - Windows: `cmd /C`
+  - macOS/Linux: `sh -c`
 
 ## 🛠️ Tecnologias
 
 - **Go 1.25.4**
 - **go-prompt** - Para interface interativa
-- **PowerShell** - Para execução de comandos no Windows
+- **cmd/sh** - Para execução de comandos externos no Windows/macOS/Linux
 
 ## 📁 Estrutura do Projeto
 
@@ -49,7 +58,7 @@ terminal/
 ### Pré-requisitos
 
 - Go 1.25+ instalado
-- Windows com PowerShell
+- Windows, macOS ou Linux
 
 ### Instalação
 
@@ -71,10 +80,10 @@ go run main.go
 
 ### Como usar
 
-1. Após executar, você verá um prompt personalizado: `C:\caminho\atual >> `
+1. Após executar, você verá um prompt personalizado: `caminho/atual >> `
 2. Digite comandos normalmente ou use as teclas de seta para navegar no histórico
 3. Use **Tab** para autocomplete - digite algumas letras e pressione Tab para ver sugestões
-4. Digite **Ctrl+C** para sair
+4. Digite `exit`, `quit` ou **Ctrl+C** para sair
 
 ### Exemplos de autocomplete
 
@@ -82,6 +91,7 @@ go run main.go
 - Digite `npm` + Tab → verá `npm install`, `npm run dev`, `npm test`
 - Digite `expo` + Tab → verá `expo start`, `expo build`, `expo run:android`
 - Digite `files` + Tab → verá todos os arquivos e pastas do diretório atual
+- Digite `cd src` + Tab → verá diretórios compatíveis com o prefixo
 
 ## 🔧 Personalização
 

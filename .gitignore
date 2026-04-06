@@ -4,3 +4,8 @@ devshell.pdb
 devshell.deps.json
 devshell.runtimeconfig.json
 devshell.*
+.DS_Store
+.vscode/
+.idea/
+*.sln
+*.csproj
