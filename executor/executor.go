@@ -7,7 +7,10 @@ import (
 	"os/signal"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
+	"syscall"
+	"time"
 )
 
 func Execute(input string) {
@@ -27,7 +30,8 @@ func Execute(input string) {
 		cmd = exec.Command("cmd", "/C", input)
 
 	case "darwin", "linux":
-		cmd = exec.Command("sh", "-c", input)
+		// Replace shell process with the target command so Ctrl+C reaches it directly.
+		cmd = exec.Command("sh", "-c", "exec "+input)
 
 	default:
 		fmt.Println("Sistema operacional não suportado")
@@ -48,22 +52,28 @@ func runWithInterruptSupport(cmd *exec.Cmd) error {
 		return err
 	}
 
-	sigCh := make(chan os.Signal, 1)
-	signal.Notify(sigCh, os.Interrupt)
+	sigCh := make(chan os.Signal, 4)
+	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM, syscall.SIGHUP)
 	defer signal.Stop(sigCh)
 
 	stopForward := make(chan struct{})
+	interruptCount := 0
 	go func() {
 		for {
 			select {
-			case <-sigCh:
-				if cmd.Process == nil {
+			case sig := <-sigCh:
+				if sig == os.Interrupt {
+					interruptCount++
+					sendSignalToProcessTree(cmd, syscall.SIGINT)
+					if interruptCount > 1 {
+						sendSignalToProcessTree(cmd, syscall.SIGKILL)
+					}
 					continue
 				}
 
-				if err := cmd.Process.Signal(os.Interrupt); err != nil {
-					_ = cmd.Process.Kill()
-				}
+				sendSignalToProcessTree(cmd, syscall.SIGTERM)
+				time.Sleep(300 * time.Millisecond)
+				sendSignalToProcessTree(cmd, syscall.SIGKILL)
 			case <-stopForward:
 				return
 			}
@@ -74,6 +84,67 @@ func runWithInterruptSupport(cmd *exec.Cmd) error {
 	close(stopForward)
 
 	return err
+}
+
+func sendSignalToProcessTree(cmd *exec.Cmd, sig syscall.Signal) {
+	if cmd == nil || cmd.Process == nil {
+		return
+	}
+
+	pids := []int{cmd.Process.Pid}
+	pids = append(pids, listDescendantPIDs(cmd.Process.Pid)...)
+
+	for i := len(pids) - 1; i >= 0; i-- {
+		_ = syscall.Kill(pids[i], sig)
+	}
+}
+
+func listDescendantPIDs(rootPID int) []int {
+	if runtime.GOOS != "darwin" && runtime.GOOS != "linux" {
+		return nil
+	}
+
+	visited := map[int]struct{}{}
+	var result []int
+	queue := []int{rootPID}
+
+	for len(queue) > 0 {
+		current := queue[0]
+		queue = queue[1:]
+
+		children := listDirectChildren(current)
+		for _, child := range children {
+			if _, ok := visited[child]; ok {
+				continue
+			}
+
+			visited[child] = struct{}{}
+			result = append(result, child)
+			queue = append(queue, child)
+		}
+	}
+
+	return result
+}
+
+func listDirectChildren(pid int) []int {
+	cmd := exec.Command("pgrep", "-P", strconv.Itoa(pid))
+	output, err := cmd.Output()
+	if err != nil {
+		return nil
+	}
+
+	lines := strings.Fields(string(output))
+	children := make([]int, 0, len(lines))
+	for _, line := range lines {
+		childPID, convErr := strconv.Atoi(strings.TrimSpace(line))
+		if convErr != nil {
+			continue
+		}
+		children = append(children, childPID)
+	}
+
+	return children
 }
 
 func PromptPrefix() string {
